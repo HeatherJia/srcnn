@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 from data import DatasetFromFolder
 from model import SRCNN
 
+from torchvision.models import vgg19
+
 parser = argparse.ArgumentParser(description='SRCNN training parameters')
 parser.add_argument('--zoom_factor', type=int, required=True)
 parser.add_argument('--nb_epochs', type=int, default=200)
@@ -39,6 +41,20 @@ optimizer = optim.Adam(  # we use Adam instead of SGD like in the paper, because
     ], lr=0.00001,
 )
 
+class FeatureExtractor(nn.Module):
+    def __init__(self):
+        super(FeatureExtractor, self).__init__()
+        vgg19_model = vgg19(pretrained=True)
+        self.feature_extractor = nn.Sequential(*list(vgg19_model.features.children())[:18])
+
+    def forward(self, img):
+        return self.feature_extractor(img)
+
+feature_extractor = FeatureExtractor().cuda()
+feature_extractor.eval() # Set feature extractor to inference mode
+criterion_content = nn.L1Loss().cuda()
+vgg19_model = vgg19(pretrained=True)
+
 for epoch in range(args.nb_epochs):
 
     # Train
@@ -48,8 +64,13 @@ for epoch in range(args.nb_epochs):
         optimizer.zero_grad()
 
         out = model(input)
-        loss = criterion(out, target)
+
+        gen_features = feature_extractor(out)
+        real_features = feature_extractor(target)
+        content_loss = criterion_content(gen_features, real_features.detach())
+        loss = criterion(out, target) + content_loss
         loss.backward()
+        
         optimizer.step()
         epoch_loss += loss.item()
 
