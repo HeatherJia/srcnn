@@ -10,6 +10,7 @@ from data import DatasetFromFolder
 from model import SRCNN
 
 from torchvision.models import vgg19
+from torch.autograd import Variable
 
 parser = argparse.ArgumentParser(description='SRCNN training parameters')
 parser.add_argument('--zoom_factor', type=int, required=True)
@@ -54,6 +55,7 @@ feature_extractor = FeatureExtractor().cuda()
 feature_extractor.eval() # Set feature extractor to inference mode
 criterion_content = nn.L1Loss().cuda()
 vgg19_model = vgg19(pretrained=True)
+Tensor = torch.cuda.FloatTensor
 
 for epoch in range(args.nb_epochs):
 
@@ -65,8 +67,8 @@ for epoch in range(args.nb_epochs):
 
         out = model(input)
 
-        gen_features = feature_extractor(out)
-        real_features = feature_extractor(target)
+        gen_features = feature_extractor(Variable(out.type(Tensor)))
+        real_features = feature_extractor(Variable(target.type(Tensor)))
         content_loss = criterion_content(gen_features, real_features.detach())
         loss = criterion(out, target) + content_loss
         loss.backward()
