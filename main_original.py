@@ -66,15 +66,15 @@ for epoch in range(args.nb_epochs):
         optimizer.zero_grad()
 
         out = model(input)
-        new_out = out.repeat(1,3,1,1)
-        new_target = target.repeat(1,3,1,1)
-        print("\nout shape=", new_out.shape)
-        print("\ntarget shape=", new_target.shape)
+        # new_out = out.repeat(1,3,1,1)
+        # new_target = target.repeat(1,3,1,1)
+        # print("\nout shape=", new_out.shape)
+        # print("\ntarget shape=", new_target.shape)
         
-        gen_features = feature_extractor(Variable(new_out.type(Tensor)))
-        real_features = feature_extractor(Variable(new_target.type(Tensor)))
-        content_loss = criterion_content(gen_features, real_features.detach())
-        loss = criterion(out, target) + content_loss
+        # gen_features = feature_extractor(Variable(new_out.type(Tensor)))
+        # real_features = feature_extractor(Variable(new_target.type(Tensor)))
+        # content_loss = criterion_content(gen_features, real_features.detach())
+        loss = criterion(out, target)
         loss.backward()
         
         optimizer.step()
