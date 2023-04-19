@@ -66,7 +66,8 @@ for epoch in range(args.nb_epochs):
         optimizer.zero_grad()
 
         out = model(input)
-
+        print("\nout shape=", out.shape)
+        print("\ntarget shape=", target.shape)
         gen_features = feature_extractor(Variable(out.type(Tensor)))
         real_features = feature_extractor(Variable(target.type(Tensor)))
         content_loss = criterion_content(gen_features, real_features.detach())
